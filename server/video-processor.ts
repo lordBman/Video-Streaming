@@ -1,5 +1,7 @@
+import type { Blob } from 'buffer'
+import type { BunFile } from 'bun'
 import { spawn } from 'child_process'
-import { existsSync, mkdirSync, readdirSync } from 'fs'
+import { existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
 export class VideoProcessor {
@@ -68,7 +70,7 @@ export class VideoProcessor {
         return videoId
     }
 
-    generateThumbnail = async (videoId: string, time: number): Promise<Buffer> =>{
+    generateThumbnail = async (videoId: string, time: number): Promise<BlobPart[]> =>{
         const inputPath = join('uploads', `${videoId}.mp4`)
         const tempOutput = join('thumbnails', `${videoId}_${time}.jpg`)
 
@@ -78,23 +80,91 @@ export class VideoProcessor {
             '-frames:v', '1',
             '-q:v', '2',
             '-f', 'image2',
-            '-'
+            tempOutput
         ]
 
         return new Promise((resolve, reject) => {
             const ffmpeg = spawn(this.ffmpegPath, args)
-            const chunks: Buffer[] = []
+            const chunks: BlobPart[] = []
 
             ffmpeg.stdout.on('data', (chunk) => chunks.push(chunk))
             ffmpeg.stderr.on('data', () => {}) // Ignore stderr
 
             ffmpeg.on('close', (code) => {
                 if (code === 0) {
-                    resolve(Buffer.concat(chunks))
+                    resolve(chunks)
                 } else {
                     reject(new Error(`FFmpeg failed with code ${code}`))
                 }
             })
         })
+    }
+
+    generatePreview = async (videoId: string, startTime: number): Promise<BlobPart[]> => {
+        const inputPath = join('uploads', `${videoId}.mp4`)
+        const tempOutput = join('previews', `${videoId}_preview.mp4`)
+
+        const args = [
+            '-ss', startTime.toString(),
+            '-i', inputPath,
+            '-t', '10',
+            '-c:v', 'libx264',
+            '-c:a', 'aac',
+            '-b:v', '1000k',
+            '-b:a', '128k',
+            '-f', 'mp4',
+            tempOutput
+        ]
+
+        return new Promise((resolve, reject) => {
+            const ffmpeg = spawn(this.ffmpegPath, args)
+            const chunks: BlobPart[] = []
+            ffmpeg.stdout.on('data', (chunk) => chunks.push(chunk))
+            ffmpeg.stderr.on('data', () => {}) // Ignore stderr
+            ffmpeg.on('close', (code) => {
+                if (code === 0) {
+                    resolve(chunks)
+                } else {
+                    reject(new Error(`FFmpeg failed with code ${code}`))
+                }
+            })
+        })
+    }
+
+    // Generate thumbnails every 10 seconds
+    private generateThumbnails = async (inputPath: string, videoId: string): Promise<void> => {
+        const thumbnailDir = join('thumbnails', videoId)
+        mkdirSync(thumbnailDir, { recursive: true })
+
+        const args = [
+            '-i', inputPath,
+            '-vf', 'fps=1/10',
+            '-q:v', '2',
+            '-s', '160x90',
+            join(thumbnailDir, 'thumb_%03d.jpg')
+        ]
+
+        await this.runFFmpeg(args)
+    }
+
+    private runFFmpeg = (args: string[]): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            const ffmpeg = spawn(this.ffmpegPath, args)
+            ffmpeg.stderr.on('data', (data) => {
+                console.error(`FFmpeg stderr: ${data}`)
+            })
+            ffmpeg.on('close', (code) => {
+                if (code === 0) {
+                    resolve()
+                } else {
+                    reject(new Error(`FFmpeg exited with code ${code}`))
+                }
+            })
+        })
+    }
+
+    private getBandwidth = (bitrate: string): number => {
+        const num = parseInt(bitrate.replace('k', ''))
+        return num * 1000 * 1.5 // Add 50% overhead
     }
 }
