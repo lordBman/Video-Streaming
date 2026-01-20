@@ -125,7 +125,7 @@ export class VideoProcessor {
                 if (code === 0) {
                     resolve(chunks)
                 } else {
-                    reject(new Error(`FFmpeg failed with code ${code}`))
+                    reject(`FFmpeg failed with code ${code}`)
                 }
             })
         })
