@@ -1,4 +1,4 @@
-class VideoStreamingPlayer {
+/*class VideoStreamingPlayer {
     private videoPlayer: HTMLVideoElement
     private qualitySelect: HTMLSelectElement
     private videoGrid: HTMLDivElement
@@ -39,52 +39,7 @@ class VideoStreamingPlayer {
         this.setupHoverPreviews()
     }
     
-    private async uploadVideo() {
-        const file = this.videoUpload.files?.[0]
-        if (!file) {
-            alert('Please select a video file')
-            return
-        }
-        
-        const formData = new FormData()
-        formData.append('video', file)
-        
-        try {
-            this.uploadBtn.disabled = true
-            this.uploadBtn.textContent = 'Uploading...'
-            
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            })
-            
-            const result = await response.json()
-            
-            if (result.success) {
-                this.currentVideoId = result.videoId
-                this.loadVideo(result.videoId)
-                this.addVideoToGrid(result.videoId, file.name)
-            }
-        } catch (error) {
-            console.error('Upload failed:', error)
-            alert('Upload failed. Please try again.')
-        } finally {
-            this.uploadBtn.disabled = false
-            this.uploadBtn.textContent = 'Upload Video'
-        }
-    }
-    
-    
-    
-    private async changeQuality() {
-        const quality = this.qualitySelect.value
-        if (!quality || !this.currentVideoId) return
-        
-        const videoSource = document.getElementById('videoSource') as HTMLSourceElement
-        videoSource.src = `/stream/${this.currentVideoId}/${quality}/playlist.m3u8`
-        this.videoPlayer.load()
-        this.videoPlayer.play().catch(console.error)
-    }    
+       
     
     private setupVideoHover(videoItem: HTMLDivElement, videoId: string) {
         const previewVideo = videoItem.querySelector('.video-preview') as HTMLVideoElement
@@ -122,34 +77,9 @@ class VideoStreamingPlayer {
             thumbnail.style.display = 'block'
         })
     }
-    
-    private setupHoverPreviews() {
-        // Use Intersection Observer to lazy load previews
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const videoItem = entry.target as HTMLDivElement
-                    const videoId = videoItem.dataset.videoId
-                    
-                    if (videoId) {
-                        // Preload thumbnail
-                        const thumbnail = videoItem.querySelector('.video-thumbnail') as HTMLImageElement
-                        if (!thumbnail.src.includes('thumbnail')) {
-                            thumbnail.src = `/thumbnail/${videoId}/0`
-                        }
-                    }
-                }
-            })
-        }, { rootMargin: '50px' })
-        
-        // Observe all video items
-        document.querySelectorAll('.video-item').forEach(item => {
-            observer.observe(item)
-        })
-    }
 }
 
 // Initialize the player when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     new VideoStreamingPlayer()
-})
+})*/

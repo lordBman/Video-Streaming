@@ -37,9 +37,9 @@ export class VideoProcessor {
 
             const args = [
                 '-i', inputPath,
-                ...(watermarkPath ? ['-i', watermarkPath] : []),
-                '-filter_complex', watermarkFilter,
-                '-map', '[outv]',
+                //...(watermarkPath ? ['-i', watermarkPath] : []),
+                //'-filter_complex', watermarkFilter,
+                //'-map', '[outv]',
                 '-map', '0:a',
                 '-c:v', 'libx264',
                 '-b:v', quality.bitrate,
@@ -157,7 +157,7 @@ export class VideoProcessor {
                 if (code === 0) {
                     resolve()
                 } else {
-                    reject(new Error(`FFmpeg exited with code ${code}`))
+                    reject(`FFmpeg exited with code ${code}`)
                 }
             })
         })

@@ -25,10 +25,10 @@ const server = Bun.serve({
         "/upload": {
             POST: async (req) => {
                 const form = await req.formData()
-                const file = form.get('file') as File | null
+                const file = form.get('video') as File | null
 
                 if (!file) {
-                    return Response.json({ error: 'No file uploaded' })
+                    return Response.json({ error: 'No file uploaded' }, { status: 400 })
                 }
                 
                 const filename = `${Date.now()}_${file.name.replace(/\s/g, '_')}`

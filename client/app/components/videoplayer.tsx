@@ -1,22 +1,31 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ChangeEventHandler } from "react";
 import { formatQualityName, type VideoInfo } from "../../../common";
 import { useVideoPlayer } from "../../player-provider";
 import VideoItem from "./video-item";
 import { useCallbackRequest } from "../requests";
 
+const getVideoInfo = async(videoId: string): Promise<VideoInfo> => {
+    try {
+        const response = await fetch(`/video/${videoId}/info`)
+        return await response.json()
+    } catch (error) {
+        console.error('Failed to get video info:', error)
+    }
+    throw Error('Failed to fetch video info');
+}
 
 const VideoPlayer = () => {
     const { videoState } = useVideoPlayer();
     const videoPlayerRef = useRef<HTMLVideoElement>(null);
 
-    const getVideoInfo = async(videoId: string): Promise<VideoInfo> => {
-        try {
-            const response = await fetch(`/video/${videoId}/info`)
-            return await response.json()
-        } catch (error) {
-            console.error('Failed to get video info:', error)
-        }
-        throw Error('Failed to fetch video info');
+    const changeQuality: ChangeEventHandler<HTMLSelectElement> = async(event) => {
+        const quality = event.target.value
+        if (!quality || !videoState.current) return
+
+        const videoSource = document.getElementById('videoSource') as HTMLSourceElement
+        videoSource.src = `/stream/${videoState.current}/${quality}/playlist.m3u8`
+        videoPlayerRef.current?.load()
+        videoPlayerRef.current?.play().catch(console.error)
     }
 
     const { data: videoInfo, loading, start } = useCallbackRequest<VideoInfo, string>({
@@ -44,7 +53,7 @@ const VideoPlayer = () => {
                 </video>
            )}
             <div className="quality-selector">
-                <select id="qualitySelect">
+                <select id="qualitySelect" onChange={changeQuality} value="">
                     <option value="">Select Quality</option>
                     {videoInfo && videoInfo.qualities.map(quality => (
                         <option key={quality} value={quality}>{formatQualityName(quality)}</option>

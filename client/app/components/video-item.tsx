@@ -1,5 +1,23 @@
 import type React from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+ // Use Intersection Observer to lazy load previews
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const videoItem = entry.target as HTMLDivElement
+            const videoId = videoItem.dataset.videoId
+            
+            if (videoId) {
+                // Preload thumbnail
+                const thumbnail = videoItem.querySelector('.video-thumbnail') as HTMLImageElement
+                if (!thumbnail.src.includes('thumbnail')) {
+                    thumbnail.src = `/thumbnail/${videoId}/0`
+                }
+            }
+        }
+    })
+}, { rootMargin: '50px' })
 
 type VideoItemProps = {
     videoId: string;
@@ -12,8 +30,7 @@ const VideoItem: React.FC<VideoItemProps> = ({ videoId, name }) => {
 
     const previewVideoRef = useRef<HTMLVideoElement>(null);
     const thumbnailRef = useRef<HTMLImageElement>(null);
-        
-    
+    const videoItemRef = useRef<HTMLDivElement>(null);
 
     const loadPreview = async (videoId: string, startTime: number): Promise<Blob> => {
         const response = await fetch(`/preview/${videoId}/${startTime}`)
@@ -49,6 +66,12 @@ const VideoItem: React.FC<VideoItemProps> = ({ videoId, name }) => {
         previewVideoRef.current!.style.display = 'none'
         thumbnailRef.current!.style.display = 'block'
     }
+
+    useEffect(() => {
+        if (videoItemRef.current) {
+            observer.observe(videoItemRef.current)
+        }
+    }, [videoItemRef.current]);
 
     return (
         <div className="video-item" onMouseLeave={handleMouseLeave} onMouseEnter={handleMouseEnter}>
