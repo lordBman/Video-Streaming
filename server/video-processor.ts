@@ -42,7 +42,8 @@ export class VideoProcessor {
                 //'-map', '[outv]',
                 '-map', '0:a',
                 '-c:v', 'libx264',
-                '-b:v', quality.bitrate,
+                '-b:v', "64k",
+                '-bufsize', '64k',
                 '-c:a', 'aac',
                 '-b:a', '128k',
                 '-f', 'hls',
@@ -94,7 +95,7 @@ export class VideoProcessor {
                 if (code === 0) {
                     resolve(chunks)
                 } else {
-                    reject(new Error(`FFmpeg failed with code ${code}`))
+                    reject(`FFmpeg failed with code ${code}`)
                 }
             })
         })

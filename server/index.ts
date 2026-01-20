@@ -6,7 +6,7 @@ import { join } from 'path'
 import html from "../client/index.html"
 
 // Ensure directories exist
-const directories = ['uploads', 'streams', 'thumbnails']
+const directories = ['uploads', 'streams', 'thumbnails', 'previews']
 directories.forEach(dir => {
     if (!existsSync(dir)) {
         mkdirSync(dir, { recursive: true })
