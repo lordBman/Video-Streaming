@@ -37,3 +37,6 @@ thumbnails
 streams
 uploads
 input.mp4
+pocketbase.*
+pocketbase
+/generated/prisma

@@ -1,20 +1,5 @@
-import { VideoProcessor } from './video-processor'
-import { StreamManager } from './stream-manager'
-import { existsSync, mkdirSync } from 'fs'
-import { join } from 'path'
-
 import html from "../client/index.html"
-
-// Ensure directories exist
-const directories = ['uploads', 'streams', 'thumbnails', 'previews']
-directories.forEach(dir => {
-    if (!existsSync(dir)) {
-        mkdirSync(dir, { recursive: true })
-    }
-})
-
-const videoProcessor = new VideoProcessor()
-const streamManager = new StreamManager()
+import { handleFetchThumbnail, handleGenerateThumbnail, handleGetVideos, handlePreviewVideo, handleStreamFile, handleUpload, handleVideoInfo } from './controller'
 
 const server = Bun.serve({
     port: 3000,
@@ -22,7 +7,7 @@ const server = Bun.serve({
         // Serve static files
         "/*": html,
         // Upload endpoint
-        "/upload": {
+        "/api/upload": {
             POST: async (req) => {
                 const form = await req.formData()
                 const file = form.get('video') as File | null
@@ -30,64 +15,60 @@ const server = Bun.serve({
                 if (!file) {
                     return Response.json({ error: 'No file uploaded' }, { status: 400 })
                 }
-                
-                const filename = `${Date.now()}_${file.name.replace(/\s/g, '_')}`
-                const uploadPath = join('uploads', filename)
 
-                // Save the uploaded file
-                await Bun.write(uploadPath, file)
-
-                // Process the uploaded video
-                const videoId = await videoProcessor.processVideo(uploadPath, file.name, "bsoft limited")
-
+                const videoInfo = await handleUpload(file)
                 return Response.json({ 
-                    success: true, videoId, streamUrl: `/stream/${videoId}/master.m3u8`
+                    success: true, videoInfo, streamUrl: `/api/stream/${videoInfo.id}/master.m3u8`
                 }, { status: 201 })
             }
         },
         // Video streaming endpoint
-        "/stream/:videoId/:file":  {
+        "/api/stream/:videoId/*":  {
             GET: async (req) => {
                 const videoId = req.params.videoId
-                const file = req.params.file
-                const filePath = join('streams', videoId, file)
-                
-                if (!existsSync(filePath)) {
-                    return Response.json({ error: 'File not found' }, { status: 404 })
-                }
+                const url = decodeURI(req.url)
+                const file = url.substring(url.indexOf(videoId) + videoId.length + 1)
+                console.log(`Streaming file request: videoId=${videoId}, file=${file}`)
+                const data = await handleStreamFile(videoId, file)
 
-                return new Response(Bun.file(filePath))
+                return new Response(data, { headers: { 'Content-Type': 'application/x-mpegURL' } })
             }
         },
         // Thumbnail generation endpoint
-        '/thumbnail/:videoId/:time': {
+        '/api/thumbnail/:videoId/:filename': {
             GET: async (req) => {
                 const videoId = req.params.videoId
-                const time = parseFloat(req.params.time)
+                const filename = req.params.filename
 
-                const thumbnail = await videoProcessor.generateThumbnail(videoId, time)
-                return new Response(new Blob(thumbnail, { type: 'image/jpeg' }))
+                const thumbnail = await handleFetchThumbnail(videoId, filename)
+                return new Response(thumbnail, { headers: { 'Content-Type': 'image/jpeg' } });
             }
         },
         // Preview video endpoint (short clip for hover)
-        '/preview/:videoId/:startTime': {
+        '/api/preview/:videoId': {
             GET: async (req) => {
                 const videoId = req.params.videoId
-                const startTime = parseFloat(req.params.startTime)
 
-                const preview = await videoProcessor.generatePreview(videoId, startTime)
-                return new Response(new Blob(preview, { type: 'video/mp4' }))
+                const preview = await handlePreviewVideo(videoId)
+                return new Response(preview, { headers: { 'Content-Type': 'video/mp4' } })
             }
         },
         // Video info endpoint
-        '/video/:videoId/info': {
+        '/api/video/:videoId/info': {
             GET: async (req) => {
                 const videoId = req.params.videoId
-                const info = streamManager.getVideoInfo(videoId)
+                const info = await handleVideoInfo(videoId)
                 if (!info){
                     return Response.json({ error: 'Video not found' }, { status: 404 })
                 }
                 return Response.json(info)
+            }
+        },
+        // get list of videos endpoint
+        '/api/videos': {
+            GET: async () => {
+                const videos = await handleGetVideos()
+                return Response.json(videos)
             }
         }
     }

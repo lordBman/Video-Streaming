@@ -19,12 +19,12 @@ const Upload = () =>{
         
         try {
             setUploadEnabled(false) 
-            const response = await fetch('/upload', { method: 'POST', body: formData })
+            const response = await fetch('/api/upload', { method: 'POST', body: formData })
             const result = await response.json()
             
             if (result.success) {
-                setCurrent(result.videoId)
-                addVideoToGrid(result.videoId, file.name)
+                setCurrent(result.videoInfo.id)
+                addVideoToGrid(result.videoInfo);
             }
         } catch (error) {
             console.error('Upload failed:', error)

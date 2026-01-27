@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Seekbar Cursor Position</title>
+  <style>
+    * {
+        margin: 0px;
+        padding: 0px;
+        box-sizing: border-box;
+    }
+
+    body { 
+        font-family: Arial, sans-serif; 
+        width: 100dvw;
+        height: 100dvh;
+        overflow: hidden;
+    }
+
+    .video{
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .controls{
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+        padding: 20px;
+
+        display: flex;
+        flex-direction: column;
+    }
+
+    .seekbar-handler{
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+        height: 6px;
+        margin-top: 20px;
+        cursor: pointer;
+    }
+    
+    .seekbar {
+      position: relative;
+      width: 100%;
+      height: 3px;
+      border-radius: 1px;
+      background: #ccc;
+    }
+
+    .progress {
+      position: absolute;
+      height: 100%;
+      background: #4c66af;
+      width: 0;
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .progress-thumb{
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        height: 16px;
+        width: 16px;
+        border-radius: 8px;
+        background-color: #4c66af;
+    }
+  </style>
+</head>
+<body>
+
+<video class="video" id="video">
+  <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+  Your browser does not support HTML video.
+</video>
+
+<div class="controls" >
+    <span style="align-self: center; justify-self: center; font-size: 16px; font-weight: 300;">Play/Pause</span>
+    <div style="width: 100%; align-self: flex-end;">
+        <p id="positionText">Cursor X: 0px</p>
+        <div class="seekbar-handler" id="seekbar-handler">
+            <div class="seekbar" id="seekbar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <div class="progress-thumb" id="progress-thumb"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+  const seekbar_handler = document.getElementById('seekbar-handler');
+  const progress = document.getElementById('progress');
+  const progress_thumb = document.getElementById("progress-thumb")
+  const positionText = document.getElementById('positionText');
+  const video = document.getElementById('video');
+
+  let isDragging = false;
+
+  function updateSeekBar(clientX) {
+    const rect = seekbar_handler.getBoundingClientRect();
+    let offsetX = clientX - rect.left;
+    offsetX = Math.max(0, Math.min(offsetX, rect.width)); // clamp between 0 and width
+    const percent = (offsetX / rect.width);
+
+    video.currentTime = percent * video.duration;
+
+    progress.style.width = `${percent * 100}%`;
+    progress_thumb.style.left = `${percent * 100}%`;
+    //valueDisplay.textContent = Math.round(percent);
+  }
+
+  // Touch events for mobile
+  progress_thumb.addEventListener('touchstart', () => { isDragging = true; });
+  document.addEventListener('touchend', () => { isDragging = false; });
+  document.addEventListener('touchmove', (e) => {
+    if (isDragging) {
+        updateSeekBar(e.touches[0].clientX);
+    }
+  });
+
+  // Mouse events
+  progress_thumb.addEventListener('mousedown', () => { isDragging = true; });
+  document.addEventListener('mouseup', () => { isDragging = false; });
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+        updateSeekBar(e.clientX);
+    }
+  });
+
+  // Function to get horizontal cursor position relative to seekbar
+  function getCursorPosition(event) {
+    const rect = seekbar_handler.getBoundingClientRect(); // Get seekbar position & size
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    let x = clientX - rect.left; // Distance from left edge
+    x = Math.max(0, Math.min(x, rect.width)); // Clamp between 0 and width
+    return x;
+  }
+
+  // Update progress bar and text on mouse move
+  seekbar_handler.addEventListener('mousemove', (e) => {
+    const x = getCursorPosition(e);
+    positionText.textContent = `Cursor X: ${x.toFixed(2)}px`;
+  });
+
+  // Seek video on click
+  seekbar_handler.addEventListener('click', (e) => {
+    updateSeekBar(e.clientX);
+  });
+
+  // Update progress bar as video plays
+  video.addEventListener('timeupdate', () => {
+    const percent = (video.currentTime / video.duration) * 100;
+    progress.style.width = `${percent}%`;
+  });
+</script>
+
+</body>
+</html>

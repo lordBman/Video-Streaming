@@ -1,8 +1,17 @@
-export interface VideoInfo {
+export interface Video {
     id: string
-    qualities: string[]
-    duration: number
-    thumbnails: string[]
+    name: string
+    processed: boolean
+}
+
+export interface Thumbnail{
+    id: string
+    videoId: string
+    filename: string
+}
+
+export interface VideoInfo extends Video {
+    thumbnails: Thumbnail[]
 }
 
 export const formatQualityName = (quality: string): string => {

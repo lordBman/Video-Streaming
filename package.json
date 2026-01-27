@@ -4,7 +4,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^19.2.8",
-    "@types/react-dom": "^19.2.3"
+    "@types/react-dom": "^19.2.3",
+    "prisma": "^7.3.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -12,7 +13,16 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@prisma/adapter-libsql": "^7.3.0",
+    "@prisma/client": "^7.3.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
+  },
+  "scripts": {
+    "start": "bun run --watch server/index.ts",
+    "start-db": "./pocketbase.exe serve --dir ./pocketbase/data",
+    "prisma-generate": "prisma generate",
+    "prisma-migrate": "prisma migrate dev --name init",
+    "prisma-studio": "prisma studio --config ./prisma.config.ts"
   }
 }

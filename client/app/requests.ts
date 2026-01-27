@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface RequestProps<T>{
-    fn: () => Promise<T>
+    fn: () => Promise<T>,
+    onStart?: ()=> void,
+    onDone?: (data: T)=> void
+    onFail?: (error: any) =>void
 }
 
 const useRequest = <T>(props: RequestProps<T>) =>{
@@ -9,18 +12,38 @@ const useRequest = <T>(props: RequestProps<T>) =>{
 
     const executedRef = useRef(false);
 
+    const loadData = ()=>{
+        if (props.onStart) {
+            props.onStart();
+        }
+        props.fn().then((data) => {
+            setState({ loading: false, data });
+            if (props.onDone) {
+                props.onDone(data);
+            }
+        }).catch((error) => {
+            setState({ loading: false, error });
+            if (props.onFail) {
+                props.onFail(error);
+            }
+        });
+    }
+
+    const reload = () => {
+        if(!state.loading){
+            setState({ loading: true });
+            loadData();
+        }
+    }
+
     useEffect(() => {
         if (!executedRef.current) {
             executedRef.current = true;
-            props.fn().then((data) => {
-                setState({ loading: false, data });
-            }).catch((error) => {
-                setState({ loading: false, error });
-            });
+            loadData();
         }
     }, [executedRef.current, state.data]); // Only depend on props.fn
 
-    return { ...state }
+    return { ...state, reload }
 }
 
 interface CallbackRequestProps<T, R>{

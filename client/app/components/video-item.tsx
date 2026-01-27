@@ -1,84 +1,49 @@
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
-
- // Use Intersection Observer to lazy load previews
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const videoItem = entry.target as HTMLDivElement
-            const videoId = videoItem.dataset.videoId
-            
-            if (videoId) {
-                // Preload thumbnail
-                const thumbnail = videoItem.querySelector('.video-thumbnail') as HTMLImageElement
-                if (!thumbnail.src.includes('thumbnail')) {
-                    thumbnail.src = `/thumbnail/${videoId}/0`
-                }
-            }
-        }
-    })
-}, { rootMargin: '50px' })
+import { useRef, useState } from "react";
+import type { VideoInfo } from "../../../common";
+import { useVideoPlayer } from "../../player-provider";
 
 type VideoItemProps = {
-    videoId: string;
-    name: string;
+    video: VideoInfo;
+
 }
 
-const VideoItem: React.FC<VideoItemProps> = ({ videoId, name }) => {
-    const thumbnailUrl = `/thumbnail/${videoId}/0`;
-    const [previewLoaded, setPreviewLoaded] = useState(false);
+const VideoItem: React.FC<VideoItemProps> = ({ video }) => {
+    const { setCurrent } = useVideoPlayer();
+
+    const thumbnailUrl = `/api/thumbnail/${video.id}/${video.thumbnails[0]?.filename}`;
+    const [showPreview, setShowPreview] = useState(false);
 
     const previewVideoRef = useRef<HTMLVideoElement>(null);
-    const thumbnailRef = useRef<HTMLImageElement>(null);
-    const videoItemRef = useRef<HTMLDivElement>(null);
-
-    const loadPreview = async (videoId: string, startTime: number): Promise<Blob> => {
-        const response = await fetch(`/preview/${videoId}/${startTime}`)
-        return await response.blob()
-    }
         
     const handleMouseEnter: React.MouseEventHandler<HTMLDivElement> = async(event) => {
-        if (!previewLoaded) {
-            try {
-                // Load 3-second preview starting from 30 seconds
-                const previewBlob = await loadPreview(videoId, 30)
-                previewVideoRef.current!.src = URL.createObjectURL(previewBlob)
-                setPreviewLoaded(true)
-            } catch (error) {
-                console.error('Failed to load preview:', error)
+        let playing = false;
+        previewVideoRef.current!.currentTime = 0
+        previewVideoRef.current!.play().then(()=> {
+            playing = true;
+            setShowPreview(true)
+        }).catch((error) => {
+            console.error('Error playing preview video:', error);
+        });
+
+        event.currentTarget.onmouseleave = () =>{
+            if(playing){
+                previewVideoRef.current!.pause();
             }
-        }
-
-        if (previewVideoRef.current!.src) {
-            previewVideoRef.current!.currentTime = 0
-            previewVideoRef.current!.play().catch(() => {
-                // If autoplay fails, show thumbnail
-                previewVideoRef.current!.style.display = 'none'
-                thumbnailRef.current!.style.display = 'block'
-            })
-            previewVideoRef.current!.style.display = 'block'
-            thumbnailRef.current!.style.display = 'none'
+            setShowPreview(false)
         }
     }
 
-    const handleMouseLeave: React.MouseEventHandler<HTMLDivElement> = () => {
-        previewVideoRef.current!.pause()
-        previewVideoRef.current!.style.display = 'none'
-        thumbnailRef.current!.style.display = 'block'
+    const handleClick: React.MouseEventHandler<HTMLDivElement> = () => {
+        setCurrent(video);
     }
-
-    useEffect(() => {
-        if (videoItemRef.current) {
-            observer.observe(videoItemRef.current)
-        }
-    }, [videoItemRef.current]);
 
     return (
-        <div className="video-item" onMouseLeave={handleMouseLeave} onMouseEnter={handleMouseEnter}>
-            <img src={thumbnailUrl} alt={name} className="video-thumbnail" ref={thumbnailRef} />
-            <video className="video-preview" muted preload="none" ref={previewVideoRef} />
+        <div className="video-item" onMouseEnter={handleMouseEnter} onClick={handleClick}>
+            <img src={thumbnailUrl} alt={video.name} className="video-thumbnail" style={{ display: showPreview ? 'none' : 'block' }} />
+            <video className="video-preview" muted preload="none" ref={previewVideoRef} loop src={`/api/preview/${video.id}`} style={{ display: showPreview ? 'block' : 'none' }} />
             <div className="video-info">
-                <div className="video-title">{name}</div>
+                <div className="video-title">{video.name}</div>
                 <span className="video-quality">HD</span>
             </div>
         </div>

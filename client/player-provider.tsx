@@ -1,25 +1,22 @@
 import type React from "react";
 import { createContext, useContext, useState } from "react";
-
-interface VideoGrid{
-    videoId: string;
-    name: string;
-}
+import { useRequest } from "./app/requests";
+import type { VideoInfo } from "../common";
 
 export type VideoState = {
-    current?: string;
+    current?: VideoInfo;
     isPlaying: boolean;
 
-    videoGrid: VideoGrid[];
+    videoGrid: VideoInfo[];
 }
 
 export interface VideoPlayerContextType {
     videoState: VideoState;
 
-    setCurrent: (videoId: string) => void;
+    setCurrent: (video: VideoInfo) => void;
     play: () => void;
     pause: () => void;
-    addVideoToGrid: (videoId: string, name: string) => void;
+    addVideoToGrid: (videoInfo: VideoInfo) => void;
 }
 
 export const VideoPlayerContext = createContext<VideoPlayerContextType | null>(null);
@@ -35,8 +32,9 @@ export const useVideoPlayer = () => {
 const VideoPlayerProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     const [videoState, setVideoState] = useState<VideoState>({ isPlaying: false, videoGrid: [] });
 
-    const setCurrent = (videoId: string) => {
-        setVideoState(prev => ({ ...prev, current: videoId }));
+    const setCurrent = (video: VideoInfo) => {
+        console.log('Setting current video:', video);
+        setVideoState(prev => ({ ...prev, current: video }));
     };
 
     const play = () => {
@@ -47,16 +45,31 @@ const VideoPlayerProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
         setVideoState(prev => ({ ...prev, isPlaying: false }));
     };
 
-    const addVideoToGrid = (videoId: string, name: string) => {
+    const addVideoToGrid = (videoInfo: VideoInfo) => {
         setVideoState(prev => ({
             ...prev,
-            videoGrid: [...prev.videoGrid, { videoId, name }]
+            videoGrid: [...prev.videoGrid, videoInfo]
         }));
     };
 
+    const { loading } = useRequest<VideoInfo[]>({
+        fn: async () =>{
+            const response = await fetch('/api/videos');
+            if (response.ok) {
+                return await response.json();
+            }
+            throw Error('Failed to fetch video list');
+        },
+        onDone: (data) => {
+            setVideoState(prev => ({
+                ...prev, videoGrid: data, current: data[0]
+            }));
+        }
+    });
+
     return (
         <VideoPlayerContext.Provider value={{ videoState, setCurrent, play, pause, addVideoToGrid }}>
-            {children}
+            { loading ? <div className="loading-indicator">Loading videos...</div> : children }
         </VideoPlayerContext.Provider>
     );
 }
