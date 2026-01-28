@@ -1,4 +1,6 @@
 import html from "../client/index.html"
+import videoHtml from "../client/video.html";
+
 import { handleFetchThumbnail, handleGenerateThumbnail, handleGetVideos, handlePreviewVideo, handleStreamFile, handleUpload, handleVideoInfo } from './controller'
 
 const server = Bun.serve({
@@ -6,6 +8,7 @@ const server = Bun.serve({
     routes: {
         // Serve static files
         "/*": html,
+        "/video": videoHtml,
         // Upload endpoint
         "/api/upload": {
             POST: async (req) => {

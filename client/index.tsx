@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import App from './app/index'
+import App from './app'
 import VideoPlayerProvider from './player-provider'
 
 createRoot(document.getElementById('root')!).render(

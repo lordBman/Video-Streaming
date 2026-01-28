@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Video Seekbar Cursor Position</title>
+  <link rel="stylesheet" href="./icons.css">
   <style>
     * {
         margin: 0px;
@@ -34,6 +35,32 @@
 
         display: flex;
         flex-direction: column;
+        align-items:stretch;
+        justify-content: end;
+        gap: 20px;
+    }
+
+    .control-options{
+      background-color: rgba(0, 0, 0, 0.4);
+      color: white;
+
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      height: 50px;
+      min-width: 50px;
+      border-radius: 30px;
+      padding-left: 18px;
+      padding-right: 18px;
+
+      cursor: pointer;
+    }
+
+    .control-options-text{
+      font-size: 16px;
+      font-weight: 500;
     }
 
     .seekbar-handler{
@@ -83,15 +110,29 @@
 </video>
 
 <div class="controls" >
-    <span style="align-self: center; justify-self: center; font-size: 16px; font-weight: 300;">Play/Pause</span>
-    <div style="width: 100%; align-self: flex-end;">
-        <p id="positionText">Cursor X: 0px</p>
-        <div class="seekbar-handler" id="seekbar-handler">
-            <div class="seekbar" id="seekbar">
-                <div class="progress" id="progress"></div>
-            </div>
-            <div class="progress-thumb" id="progress-thumb"></div>
-        </div>
+    <div style="width: 100%;">
+      <p id="positionText">Cursor X: 0px</p>
+      <div class="seekbar-handler" id="seekbar-handler">
+          <div class="seekbar" id="seekbar">
+              <div class="progress" id="progress"></div>
+          </div>
+          <div class="progress-thumb" id="progress-thumb"></div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: row; width: 100%; gap: 20px">
+      <span class="control-options">
+        <span class="qlementine-icons--play-16"></span>
+      </span>
+      <span class="control-options">
+        <span class="qlementine-icons--speaker-2-16"></span>
+      </span>
+      <span class="control-options control-options-text">0:14 / 1:00:49</span>
+      <span style="flex: 1;"></span>
+      <div class="control-options">
+        <span class="control-options-text">autoplay</span>
+        <span class="qlementine-icons--settings-16"></span>
+        <span class="qlementine-icons--fullscreen-16"></span>
+      </div>
     </div>
 </div>
 

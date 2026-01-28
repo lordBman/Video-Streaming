@@ -4,7 +4,7 @@ import VideoPlayer from "./components/videoplayer"
 const App = () => {
     return (
         <div className="container">
-            <h1>Video Streaming Platform Test</h1>
+            <h1>Video Streaming Platform Bobby</h1>
             <Upload />
             <VideoPlayer />
         </div>

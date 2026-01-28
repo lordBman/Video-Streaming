@@ -40,3 +40,4 @@ input.mp4
 pocketbase.*
 pocketbase
 /generated/prisma
+dev.db
