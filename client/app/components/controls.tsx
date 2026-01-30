@@ -4,15 +4,16 @@ import SeekBar from "./seek-bar";
 interface ControlsProps{
     isPlaying: boolean
     current?: number
+    duration?: number
 
     play?: () => void
     seek?: (value: number) => void
 }
 
-const Controls: React.FC<ControlsProps> = ({ isPlaying, play, current, seek }) =>{
+const Controls: React.FC<ControlsProps> = ({ isPlaying, play, current, duration, seek }) =>{
     return (
         <div className="controls" >
-            <SeekBar current={current ?? 0} onSeek={seek}/>
+            <SeekBar current={current ?? 0} onSeek={seek} duration={duration}/>
             <div style={{ display: "flex", flexDirection: "row", width: "100%", gap: "20px" }}>
                 <span className="control-options" onClick={play}>
                     <span className={ isPlaying ? "qlementine-icons--pause-16" : "qlementine-icons--play-16" }></span>
