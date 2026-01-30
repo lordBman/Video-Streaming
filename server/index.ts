@@ -1,7 +1,7 @@
 import html from "../client/index.html"
 import videoHtml from "../client/video.html";
 
-import { handleFetchThumbnail, handleGenerateThumbnail, handleGetVideos, handlePreviewVideo, handleStreamFile, handleUpload, handleVideoInfo } from './controller'
+import { handleFetchThumbnail, handleGetVideos, handlePreviewVideo, handleStreamFile, handleUpload, handleVideoInfo } from './controller'
 
 const server = Bun.serve({
     port: 3000,
