@@ -2,15 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 
 interface SeekBarProps{
     current: number
-    duration?: number
+    total?: number
 
     onSeek?: (value: number) => void
+    onHover?: (x: number) => void
+    hoverEnd?: () => void
 }
 
-const SeekBar: React.FC<SeekBarProps> = ({ current, duration, onSeek }) =>{
+const SeekBar: React.FC<React.PropsWithChildren<SeekBarProps>> = ({ current, total, onSeek, onHover, hoverEnd, children }) =>{
     const seekBarHnadlerRef = useRef<HTMLDivElement>(null);
     const [isDragging, setDragging] = useState(false);
-    const [preview, setPreview] = useState<{ show: boolean, position: number, text: string }>({ show: false, position: 0, text: "" });
     
     const updateSeekBar = (clientX: number) => {
         const rect = seekBarHnadlerRef.current!.getBoundingClientRect();
@@ -18,7 +19,7 @@ const SeekBar: React.FC<SeekBarProps> = ({ current, duration, onSeek }) =>{
         offsetX = Math.max(0, Math.min(offsetX, rect.width)); // clamp between 0 and width
         const percent = (offsetX / rect.width);
         if(onSeek){
-            onSeek(percent * (duration ?? 0))
+            onSeek(percent * (total ?? 0))
         }
     }
 
@@ -43,8 +44,8 @@ const SeekBar: React.FC<SeekBarProps> = ({ current, duration, onSeek }) =>{
                 setDragging(false);
             }
             
-            if(preview.show){
-                setPreview(init =>({...init, show: false }))
+            if(hoverEnd){
+                hoverEnd()
             }
         });
 
@@ -58,30 +59,28 @@ const SeekBar: React.FC<SeekBarProps> = ({ current, duration, onSeek }) =>{
     const touchStart: React.TouchEventHandler<HTMLDivElement> = () => setDragging(true)
     const mouseDown: React.MouseEventHandler<HTMLDivElement> = () => setDragging(true)
     const touchMove: React.TouchEventHandler<HTMLDivElement> = (event) => {
-        const x = getCursorPosition(event.touches[0]!.clientX);
-        setPreview(init =>(
-            {...init, text: `Cursor X: ${x.toFixed(2)}px`, show: true }
-        ))
+        if(onHover){
+            const x = getCursorPosition(event.touches[0]!.clientX);
+            onHover(x)
+        }
     }
     const mouseMove: React.MouseEventHandler<HTMLDivElement> = (event) => {
-        const x = getCursorPosition(event.clientX);
-        setPreview(init =>(
-            {...init, text: `Cursor X: ${x.toFixed(2)}px`, show: true }
-        ))
+        if(onHover){
+            const x = getCursorPosition(event.clientX);
+            onHover(x)
+        }
     }
 
     const clicked: React.MouseEventHandler<HTMLDivElement> = (event) => updateSeekBar(event.clientX);
 
     return (
         <div style={{ width: "100%" }}>
-            { preview.show && (
-                <p id="positionText">{ preview.text }</p>
-            )}
+            {children}
             <div className="seekbar-handler" ref={seekBarHnadlerRef} onMouseMove={mouseMove} onTouchMove={touchMove} onClick={clicked}>
                 <div className="seekbar">
-                    <div className="progress" style={{ width: `${current / (duration ?? 0) * 100}%` }}></div>
+                    <div className="progress" style={{ width: `${current / (total ?? 0) * 100}%` }}></div>
                 </div>
-                <div className="progress-thumb" onTouchStart={touchStart} onMouseDown={mouseDown} style={{ left: `${current / (duration ?? 0) * 100}%` }}></div>
+                <div className="progress-thumb" onTouchStart={touchStart} onMouseDown={mouseDown} style={{ left: `${current / (total ?? 0) * 100}%` }}></div>
             </div>
         </div>
     );
