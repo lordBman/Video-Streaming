@@ -8,6 +8,7 @@ const Player = () =>{
     const [isPlaying, setPlaying] = useState(false);
     const [playState, setPlayState] = useState<{duration: number, current: number}>({ duration: 0, current: 0 });
     const [volumeState, setVolumeState] = useState<{ muted: boolean, value: number }>();
+    const [maximized, setMaximized] = useState(false);
     
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
@@ -59,7 +60,9 @@ const Player = () =>{
                 isPlaying={isPlaying} 
                 play={onPlayClicked} 
                 current={playState.current} 
-                duration={playState.duration} 
+                duration={playState.duration}
+                maximized={maximized}
+                toggleMaximize={()=> setMaximized((init)=> !init)}
                 seek={seek} 
                 volume={volumeState?.value ?? 0}
                 muted={volumeState?.muted ?? true}
